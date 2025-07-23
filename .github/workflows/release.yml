@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    branches:
+      - 'pharo-8'
+
+
+jobs:
+  release:
+    name: "Prepare release (${{matrix.os}})"
+    # The type of runner that the job will run on
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Add MSYS2 to PATH (Windows only)
+        if: matrix.os == 'windows-latest'
+        run: echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build
+        run: ./scripts/ci/github_build.sh
+
+      # See https://stackoverflow.com/questions/60942067/get-current-date-and-time-in-github-workflows
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Release
+        if: matrix.os == 'ubuntu-22.04'
+        uses: ncipollo/release-action@v1
+        with:
+          prerelease: true # release candidate
+          allowUpdates: true
+          replacesArtifacts: true
+          draft: true
+          generateReleaseNotes: true
+          tag: ${{ steps.date.outputs.date }}
+          artifacts: products/release/pharo64-linux-stable.zip
