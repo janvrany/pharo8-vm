@@ -30,6 +30,11 @@ $date =~ s/\s+$//m;
 $shorthash = `git log --format=%h -1`;
 $shorthash =~ s/\s+$//m;
 
+#
+# No, I want $Rev to be the revision, so:
+#
+$myrev = $shorthash;
+
 while (<STDIN>) {
     s/\$Date[^\$]*\$/\$Date: $date \$/;
     s/\$URL[^\$]*\$/\$URL: $url \$/;
